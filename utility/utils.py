@@ -1,5 +1,6 @@
 import chess
 import random
+import time
 
 ## game class ##
 class chess_game:
@@ -8,7 +9,7 @@ class chess_game:
         self.board = chess.Board()
     def play(self):
         while self.board.is_game_over() == False:
-            if self.mode == 'human_vs_AI':
+            if self.mode == 'human_vs_AI' and self.board.is_game_over() == False:
                 # human's turn
                 print(self.board)
                 print(self.board.legal_moves)
@@ -23,16 +24,20 @@ class chess_game:
                         print(self.board.legal_moves)
                         time.sleep(1)                               # time to cancel
                 print(self.board)
-            else:
-                # random AI's turn if not game_over
-                if self.board.is_game_over() == False:
-                    cmd_AI = random_agent(self.board)
-                    self.board.push(cmd_AI)
+            if (self.mode != 'human_vs_AI') and (self.board.is_game_over() == False):
+            # random AI's turn if not game_over
+                cmd_ranAI = random_agent(self.board)
+                #max, cmd_AI = minimax_agent(self.board,d=2)
+                self.board.push(cmd_ranAI)
+                print('white')
+                print(self.board)
             # AI's turn if not game_over
             if self.board.is_game_over() == False:
-                #cmd_AI = random_agent(self.board)
+                #cmd_ranAI = random_agent(self.board)
                 max, cmd_AI = minimax_agent(self.board,d=2)
                 self.board.push(cmd_AI)
+                print('black')
+                print(self.board)
         self.endscreen()
 
     def endscreen(self):
@@ -51,7 +56,7 @@ def random_agent(board):
     random_pick = random.randint(0,n_legal-1)
     cmd = str(list(board.legal_moves)[random_pick])
     cmd_AI = chess.Move.from_uci(cmd)
-    print('AI moves: ',cmd_AI)
+    print('Random AI moves: ',cmd_AI)
     return cmd_AI
 
 def minimax_agent(board,d):
@@ -59,45 +64,69 @@ def minimax_agent(board,d):
     board is chess.py class
     d is depth
     """
-    max = -999999
+    max = -9999998
+    alpha = -9999999
+    beta = 9999999
+    #bestMove = chess.Move.null()
     for move in list(board.legal_moves):
         board.push(chess.Move.from_uci(str(move)))
         #print(board)
-        value_i = -negaMax(board,d-1)
+        value_i = -negaMax(board,d-1,-alpha,-beta)
         board.pop()
-        #print('Global outcome: ', value_i)
         if value_i > max:
             max = value_i
             best_move = move
+        if value_i > alpha:
+            alpha = value_i
         #print('Current global best: ',max,best_move)
     print('AI moves: ',best_move)
     return max, chess.Move.from_uci(str(best_move))
 
 ## utility functions ##
-def negaMax(board,d):
-    """negated minmax algorithm with depth d
+def negaMax(board,d,alpha,beta):
+    """negated minimax algorithm with depth d and alpha beta pruning
     board is chess.py class
     d is depth
+    alpha, beta are integer parameters
     """
-    max = -9999999
+    max = -9999998
     if d == 0:
-        #print('Value at bottom: ', evaluate_value(board))
-        return evaluate_value(board)
+        return quiesce(board,alpha,beta)
     #print(board.legal_moves)
     for move in list(board.legal_moves):
         board.push(chess.Move.from_uci(str(move)))
-        #print(board)
-        value_i = -negaMax(board,d-1)
+        value_i = -negaMax(board,d-1,-alpha,-beta)
         board.pop()
         #print('outcome analysis: ', value_i)
+        if value_i >= beta:                     # beta pruning
+            return value_i
         if value_i > max:
             max = value_i
-            best_move = move
+        if value_i > alpha:
+            alpha = value_i
         #print('current best: ', max, best_move)
     return max
+def quiesce(board,alpha,beta):
+    """make sure that only quiet, stable states are considered -> avoid horizon effect
+    board is chess.py class
+    alpha, beta are integer parameters
+    """
+    value_stat = evaluate_value(board)
+    if value_stat >= beta:
+        return beta
+    if alpha < value_stat:
+        alpha = value_stat
+    for move in board.legal_moves:
+        if board.is_capture(move):
+            board.push(chess.Move.from_uci(str(move)))
+            value_aftercapture = -quiesce(board,-beta,-alpha)
+            board.pop()
+            if value_aftercapture >= beta:
+                return beta
+            if value_aftercapture > alpha:
+                alpha = value_aftercapture
+    return alpha
 
-
-    return move_AI
 
 def evaluate_value(board):
     """returns the expected value of a given board based on the
@@ -134,6 +163,8 @@ def evaluate_value(board):
     material_value_black = sum([a*b for a,b in zip(piece_active_black,piece_value)])
     material_value_white = sum([a*b for a,b in zip(piece_active_white,piece_value)])
 
+    postion_value_black = 0
+    postion_value_white = 0
     # PAWN
     pawntable = [
      0,  0,  0,  0,  0,  0,  0,  0,
@@ -150,12 +181,12 @@ def evaluate_value(board):
     #evaluate white pawn position
     for i in board.pieces(chess.PAWN, chess.WHITE):
         pawn_val += pawntable[i]
-    postion_value_white = pawn_val
+    postion_value_white += pawn_val
     #evaluate black pawn position
     pawn_val = 0
     for i in board.pieces(chess.PAWN, chess.BLACK).mirror():
         pawn_val += pawntable[i]
-    postion_value_black = pawn_val
+    postion_value_black += pawn_val
     # BISHOP
     bishopstable = [
     -20,-10,-10,-10,-10,-10,-10,-20,
