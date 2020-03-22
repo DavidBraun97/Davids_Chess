@@ -1,11 +1,17 @@
-## cmd line chess engine using negated Minimax + quiescence search algorithm
+## cmd line chess engine
+# using negated Minimax + quiescence search algorithm
 
+
+# Requirements:
+```
+chess (pip install python-chess)
+```
 # Instructions:
 ```
 1) clone repository to your local machine
 2) open cmd line and move to local directory: ...\Davids_Chess
-2) run: python play.py
-3) follow instructions in cmd line to choose settings
+3) run: python play.py
+4) follow instructions in cmd line to choose settings
 ```
 
 # Quiescence Search
@@ -13,3 +19,5 @@
 
 # For further information regarding chess engines and evaluation metrics refer to:
 https://www.chessprogramming.org/
+# python-chess:
+https://python-chess.readthedocs.io/en/latest/
