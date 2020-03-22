@@ -2,50 +2,69 @@ import chess
 import random
 import time
 
-## game class ##
+## chess_game class ##
 class chess_game:
-    def __init__(self,mode_flag):
-        self.mode = mode_flag
+    def __init__(self):
+        print('WELCOME! Play chess in your cmd line!')
+        self.mode = input("Select gamemode:\nhuman vs AI : press 1\nAi vs AI : press 2\n")
         self.board = chess.Board()
     def play(self):
-        while self.board.is_game_over() == False:
-            if self.mode == 'human_vs_AI' and self.board.is_game_over() == False:
+        gameover = False
+        if int(self.mode) == 1:
+            depth = int(input("Which difficulty? (depth 2,3..)\n"))
+            use_quiesce = int(input("Do you wanna use quiescence search?\nThis improves the algorithm but takes more time to compute.\nyes : press 1\nno : press 2\n"))
+            print('\nHuman vs AI:\n You are white!')
+            while (self.board.is_game_over() == False):
                 # human's turn
-                print(self.board)
-                print(self.board.legal_moves)
-                cmd_wrong = False
-                while cmd_wrong == False:
-                    try:
-                        cmd = input("Make a move: ")
-                        self.board.push_san(cmd)
-                        cmd_wrong = True
-                    except:
-                        print('Illegal move! Try: ')
-                        print(self.board.legal_moves)
-                        time.sleep(1)                               # time to cancel
-                print(self.board)
-            if (self.mode != 'human_vs_AI') and (self.board.is_game_over() == False):
-            # random AI's turn if not game_over
-                cmd_ranAI = random_agent(self.board)
-                #max, cmd_AI = minimax_agent(self.board,d=2)
-                self.board.push(cmd_ranAI)
-                print('white')
-                print(self.board)
-            # AI's turn if not game_over
-            if self.board.is_game_over() == False:
-                #cmd_ranAI = random_agent(self.board)
-                max, cmd_AI = minimax_agent(self.board,d=2)
-                self.board.push(cmd_AI)
-                print('black')
-                print(self.board)
-        self.endscreen()
-
-    def endscreen(self):
+                try:
+                    self.human_taking_turns()
+                except:
+                    break
+                try:
+                    self.search_AI_taking_turns(depth,use_quiesce)
+                except:
+                    break
+            self.endscreen()
+        elif int(self.mode) == 2:
+            depth = int(input("Which difficulty? (depth 2,3..)\n"))
+            use_quiesce = int(input("Do you wanna use quiescence search?\nThis improves the algorithm but takes more time to compute.\nyes : press 1\nno : press 2\n"))
+            print('\Search AI vs random AI!')
+            while (self.board.is_game_over() == False):
+                # human's turn
+                try:
+                    self.search_AI_taking_turns(depth,use_quiesce)
+                except:
+                    break
+                try:
+                    self.random_AI_taking_turns()
+                except:
+                    break
+            self.endscreen()
+    def human_taking_turns(self):
         print(self.board)
+        cmd_wrong = False
+        while cmd_wrong == False:
+            try:
+                cmd = input("Make a move: ")
+                self.board.push_san(cmd)
+                cmd_wrong = True
+            except:
+                print('Illegal move! Try: ')
+                print(self.board.legal_moves)
+                time.sleep(1)                                    # time to cancel
+        print(self.board)
+    def search_AI_taking_turns(self,depth,use_quiesce):
+        max, cmd_AI = minimax_agent_pruned(self.board,depth,use_quiesce)
+        self.board.push(cmd_AI)
+        print(self.board)
+    def random_AI_taking_turns(self):
+        cmd_ranAI = random_agent(self.board)
+        self.board.push(cmd_ranAI)
+        print(self.board)
+    def endscreen(self):
+        print('###############')
+        print('Game-over!')
         print(self.board.result())
-
-
-
 
 ## agents ##
 def random_agent(board):
@@ -56,10 +75,24 @@ def random_agent(board):
     random_pick = random.randint(0,n_legal-1)
     cmd = str(list(board.legal_moves)[random_pick])
     cmd_AI = chess.Move.from_uci(cmd)
-    print('Random AI moves: ',cmd_AI)
+    print('###############\nRandom AI moves:\n',board.lan(cmd_AI))
     return cmd_AI
-
 def minimax_agent(board,d):
+    """agent returns legal move based on minimax algorithm with depth d
+    board is chess.py class
+    d is depth
+    """
+    max = -9999998
+    for move in list(board.legal_moves):
+        board.push(chess.Move.from_uci(str(move)))
+        value_i = -negaMax(board,d-1)
+        board.pop()
+        if value_i > max:
+            max = value_i
+            best_move = move
+    print('###############\nAI moves:\n',board.lan(best_move))
+    return max, chess.Move.from_uci(str(best_move))
+def minimax_agent_pruned(board,d,use_quiesce):
     """agent returns legal move based on minimax algorithm with depth d
     board is chess.py class
     d is depth
@@ -67,23 +100,36 @@ def minimax_agent(board,d):
     max = -9999998
     alpha = -9999999
     beta = 9999999
-    #bestMove = chess.Move.null()
     for move in list(board.legal_moves):
         board.push(chess.Move.from_uci(str(move)))
-        #print(board)
-        value_i = -negaMax(board,d-1,-alpha,-beta)
+        value_i = -negaMax_pruned(board,d-1,-beta,-alpha,use_quiesce)
         board.pop()
         if value_i > max:
             max = value_i
             best_move = move
         if value_i > alpha:
             alpha = value_i
-        #print('Current global best: ',max,best_move)
-    print('AI moves: ',best_move)
+    print('###############\nAI moves:\n',board.lan(best_move))
     return max, chess.Move.from_uci(str(best_move))
 
-## utility functions ##
-def negaMax(board,d,alpha,beta):
+## search functions ##
+def negaMax(board,d):
+    """negated minimax algorithm with depth d
+    board is chess.py class
+    d is depth
+    """
+    max = -9999998
+    if d == 0:
+        return evaluate_value(board)
+    for move in list(board.legal_moves):
+        board.push(chess.Move.from_uci(str(move)))
+        value_i = -negaMax(board,d-1)
+        board.pop()
+        if value_i > max:
+            max = value_i
+    return max
+
+def negaMax_pruned(board,d,alpha,beta,use_quiesce):
     """negated minimax algorithm with depth d and alpha beta pruning
     board is chess.py class
     d is depth
@@ -91,21 +137,21 @@ def negaMax(board,d,alpha,beta):
     """
     max = -9999998
     if d == 0:
-        return quiesce(board,alpha,beta)
-    #print(board.legal_moves)
+        if use_quiesce == 1:
+            return quiesce(board,alpha,beta)
+        else:
+            return evaluate_value(board)
     for move in list(board.legal_moves):
         board.push(chess.Move.from_uci(str(move)))
-        value_i = -negaMax(board,d-1,-alpha,-beta)
+        #print(board)
+        value_i = -negaMax_pruned(board,d-1,-beta,-alpha,use_quiesce)
         board.pop()
-        #print('outcome analysis: ', value_i)
-        if value_i >= beta:                     # beta pruning
-            return value_i
-        if value_i > max:
-            max = value_i
+        if value_i >= beta:                                        # beta pruning
+            return beta
         if value_i > alpha:
             alpha = value_i
-        #print('current best: ', max, best_move)
-    return max
+    return alpha
+
 def quiesce(board,alpha,beta):
     """make sure that only quiet, stable states are considered -> avoid horizon effect
     board is chess.py class
@@ -127,6 +173,7 @@ def quiesce(board,alpha,beta):
                 alpha = value_aftercapture
     return alpha
 
+## evaluation metrics ##
 
 def evaluate_value(board):
     """returns the expected value of a given board based on the
