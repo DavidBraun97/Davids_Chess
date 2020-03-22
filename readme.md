@@ -3,7 +3,8 @@
 # Instructions:
 ```
 1) clone repository to your local machine
-2) run play.py in local directory ...\Davids_Chess
+2) open cmd line and move to local directory: ...\Davids_Chess
+2) run: python play.py
 3) follow instructions in cmd line to choose settings
 ```
 
