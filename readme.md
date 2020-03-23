@@ -1,5 +1,9 @@
 # cmd line chess engine using negated Minimax + quiescence search algorithm
 
+## TO DO:
+```
+Create zero-knowledge chess AI using DeepLearning
+```
 
 ## Requirements:
 ```
