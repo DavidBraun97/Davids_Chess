@@ -1,7 +1,7 @@
-# cmd line chess engine using negated Minimax + quiescence search algorithm
+# cmd line chess engine using negated Minimax + quiescence search algorithm. The chess engine has been trained on 10k+ games to evaluate board positions.
 
 ## TO DO:
--> Create zero-knowledge chess AI using DeepLearning
+-> deploy ML pipeline
 
 ## Requirements:
 ```
