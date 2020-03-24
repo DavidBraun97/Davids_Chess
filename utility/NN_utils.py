@@ -3,8 +3,9 @@ import chess.pgn
 import numpy as np
 
 
-## import
+## import data
 def pulldata(n):
+    '''This function parsses chess .png files and stores data in compressed .npz file'''
     pgn = open('data/ChessData_2014.pgn')
     X,y = [], []
     outcomes = {'1/2-1/2':0, '0-1':-1, '1-0':1}
@@ -59,12 +60,20 @@ def pulldata(n):
             print('Has parsed {} games so far.'.format(int(i)))
             print('So far: ',np.shape(X),np.shape(y))
     print('Ended after parsing {} games.'.format(int(i)))
-    return X,np.asarray(y)
-def pullandstore(n):
-    X,y = pulldata(n)
-    np.savez_compressed('data/ChessData_2014_compressed.npz', a=X, b=y)
+    np.savez_compressed('data/ChessData_2014_compressed.npz', a=X, b=np.asarray(y))
+
 def load_training_data():
+    '''This function loads training&evaluation data from compressed .npz file
+    returns X and y (np.array)
+    '''
     with np.load('data/ChessData_2014_compressed.npz') as data:
         X = data['a']
         y = data['b']
-    return X,y
+    return X.T,y
+
+def preprocess_board(board):
+    '''This function preprocesses a given board to be fed into the NN for evaluation.
+    board is chess.py class
+    returns X (np.array)
+    '''
+    return X_test
