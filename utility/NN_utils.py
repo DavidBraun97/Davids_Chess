@@ -76,4 +76,18 @@ def preprocess_board(board):
     board is chess.py class
     returns X (np.array)
     '''
+    boardstate = []
+    ## read board state ##
+    code = [True,False]
+    for idx_squ in range(64):
+        for col in range(2):
+            col_code = code[col]
+            for piece_code in range(1,7):
+                piece_idx = list(board.pieces(piece_code, col_code))
+                if idx_squ in piece_idx:
+                    boardstate.append(1)
+                else:
+                    boardstate.append(0)
+
+    X_test = np.array(boardstate, ndmin=2)
     return X_test

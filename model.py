@@ -6,9 +6,6 @@ import json
 
 ## Simple NN using keras ##
 class NN():
-    def __init__(self):
-        pass
-
     def build_model(self,X_shape):
         model = models.Sequential()
         # input layer
@@ -38,6 +35,8 @@ class NN():
             f.write(model.to_json())
         print('### Finished training. ###')
 
+        """TO DO"""
+        ## Restructure loading into seperate fucnton -> may be more efficient! ##
     def predict(self,X_test):
         # Model reconstruction from JSON file
         with open('C:/Users/David/Documents/Projekte/Davids_Chess/trained_nets/model_architecture.json', 'r') as f:

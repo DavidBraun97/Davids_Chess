@@ -3,6 +3,7 @@ import random
 import time
 
 ## chess_game class ##
+
 class chess_game:
     def __init__(self):
         print('WELCOME! Play chess in your cmd line!')
@@ -66,7 +67,11 @@ class chess_game:
         print('Game-over!')
         print(self.board.result())
 
-## agents ##
+
+
+
+## Agents ##
+
 def random_agent(board):
     """agent returns random, yet legal, chess move
     board is chess.py class

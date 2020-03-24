@@ -1,7 +1,13 @@
-# cmd line chess engine using negated Minimax + quiescence search algorithm. The chess engine has been trained on 10k+ games to evaluate board positions.
+# (Neural Network + Minimax Search) - Chess Enginge
+## Core components:
+1) negated Minimax/Quiescence search algorithm
+2) Neural Network, trained on 10-50k chess games
+-> deep learning enhanced evaluation metric to achieve more humanlike chess play 
+
 
 ## TO DO:
--> deploy ML pipeline
+-> deploy ML pipeline and integrate into search procedure
+-> revise net architecture & training (hyperparameter,training data..)
 
 ## Requirements:
 ```
