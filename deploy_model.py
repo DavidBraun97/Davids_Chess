@@ -1,24 +1,19 @@
 from model import *
 from utility.NN_utils import *
 
-'''RUN this script "deploy_model.py" to train!
-   After training, the model architecture and the weights are saved!'''
+'''RUN this script "deploy_model.py" to train the neural network!
+   After the training, the model architecture and the weights are saved!'''
 
 ## Loading training data ##
 X,y = load_training_data()
 print(np.shape(X),np.shape(y))
 n = len(y)
+val_i = n//10
 ## split into train&validation sets ##
-# X_train = X[:,0:n-100]
-# y_train = y[:n-100]
-X_train = X[0:n-100,:]
-y_train = y[:n-100]
-print(np.shape(X_train),np.shape(y_train))
-# X_val =  X[:,-100:]
-# y_val = y[-100:]
-X_val =  X[-100:,:]
-y_val = y[-100:]
-print(np.shape(X_val),np.shape(y_val))
+X_train = X[0:n-val_i,:]
+y_train = y[:n-val_i]
+X_val =  X[-val_i:,:]
+y_val = y[-val_i:]
 shape_X = np.shape(X_train)[1]
 shape_y = np.shape(y_train)
 

@@ -1,6 +1,11 @@
 import chess
 import random
 import time
+import sys,os
+
+sys.path.append(os.getcwd())
+from utility.NN_utils import *
+from model import *
 
 ## chess_game class ##
 
@@ -14,6 +19,7 @@ class chess_game:
         if int(self.mode) == 1:
             depth = int(input("Which difficulty? (depth 2,3..)\n"))
             use_quiesce = int(input("Do you wanna use quiescence search?\nThis improves the algorithm but takes more time to compute.\nyes : press 1\nno : press 2\n"))
+            NN_flag = int(input("Do you wanna use the trained neural network to supplement the board evaluation?\nThis improves the algorithm but takes more time to evaluate.\nyes : press 1\nno : press 2\n"))
             print('\nHuman vs AI:\n You are white!')
             while (self.board.is_game_over() == False):
                 # human's turn
@@ -22,18 +28,19 @@ class chess_game:
                 except:
                     break
                 try:
-                    self.search_AI_taking_turns(depth,use_quiesce)
+                    self.search_AI_taking_turns(depth,use_quiesce,NN_flag)
                 except:
                     break
             self.endscreen()
         elif int(self.mode) == 2:
             depth = int(input("Which difficulty? (depth 2,3..)\n"))
             use_quiesce = int(input("Do you wanna use quiescence search?\nThis improves the algorithm but takes more time to compute.\nyes : press 1\nno : press 2\n"))
-            print('\Search AI vs random AI!')
+            NN_flag = int(input("Do you wanna use the trained neural network to supplement the board evaluation?\nThis improves the algorithm but takes more time to evaluate.\nyes : press 1\nno : press 2\n"))
+            print('\nSearch AI vs random AI!')
             while (self.board.is_game_over() == False):
                 # human's turn
                 try:
-                    self.search_AI_taking_turns(depth,use_quiesce)
+                    self.search_AI_taking_turns(depth,use_quiesce,NN_flag)
                 except:
                     break
                 try:
@@ -52,10 +59,15 @@ class chess_game:
             except:
                 print('Illegal move! Try: ')
                 print(self.board.legal_moves)
-                time.sleep(1)                                    # time to cancel
+                time.sleep(1)                                   # time to cancel
         print(self.board)
-    def search_AI_taking_turns(self,depth,use_quiesce):
-        max, cmd_AI = minimax_agent_pruned(self.board,depth,use_quiesce)
+    def search_AI_taking_turns(self,depth,use_quiesce,NN_flag):
+        if NN_flag == 1:
+            model = NN()
+            chess_model = model.load_model()
+        else:
+            chess_model = None
+        max, cmd_AI = minimax_agent_pruned(self.board,depth,use_quiesce,chess_model)
         self.board.push(cmd_AI)
         print(self.board)
     def random_AI_taking_turns(self):
@@ -82,7 +94,7 @@ def random_agent(board):
     cmd_AI = chess.Move.from_uci(cmd)
     print('###############\nRandom AI moves:\n',board.lan(cmd_AI))
     return cmd_AI
-def minimax_agent(board,d):
+def minimax_agent(board,d,model):
     """agent returns legal move based on minimax algorithm with depth d
     board is chess.py class
     d is depth
@@ -90,14 +102,14 @@ def minimax_agent(board,d):
     max = -9999998
     for move in list(board.legal_moves):
         board.push(chess.Move.from_uci(str(move)))
-        value_i = -negaMax(board,d-1)
+        value_i = -negaMax(board,d-1,model)
         board.pop()
         if value_i > max:
             max = value_i
             best_move = move
     print('###############\nAI moves:\n',board.lan(best_move))
     return max, chess.Move.from_uci(str(best_move))
-def minimax_agent_pruned(board,d,use_quiesce):
+def minimax_agent_pruned(board,d,use_quiesce,model):
     """agent returns legal move based on minimax algorithm with depth d
     board is chess.py class
     d is depth
@@ -107,7 +119,7 @@ def minimax_agent_pruned(board,d,use_quiesce):
     beta = 9999999
     for move in list(board.legal_moves):
         board.push(chess.Move.from_uci(str(move)))
-        value_i = -negaMax_pruned(board,d-1,-beta,-alpha,use_quiesce)
+        value_i = -negaMax_pruned(board,d-1,-beta,-alpha,use_quiesce,model)
         board.pop()
         if value_i > max:
             max = value_i
@@ -118,23 +130,23 @@ def minimax_agent_pruned(board,d,use_quiesce):
     return max, chess.Move.from_uci(str(best_move))
 
 ## search functions ##
-def negaMax(board,d):
+def negaMax(board,d,model):
     """negated minimax algorithm with depth d
     board is chess.py class
     d is depth
     """
     max = -9999998
     if d == 0:
-        return evaluate_value(board)
+        return evaluate_value(board,model)
     for move in list(board.legal_moves):
         board.push(chess.Move.from_uci(str(move)))
-        value_i = -negaMax(board,d-1)
+        value_i = -negaMax(board,d-1,NN_flag)
         board.pop()
         if value_i > max:
             max = value_i
     return max
 
-def negaMax_pruned(board,d,alpha,beta,use_quiesce):
+def negaMax_pruned(board,d,alpha,beta,use_quiesce,model):
     """negated minimax algorithm with depth d and alpha beta pruning
     board is chess.py class
     d is depth
@@ -143,13 +155,13 @@ def negaMax_pruned(board,d,alpha,beta,use_quiesce):
     max = -9999998
     if d == 0:
         if use_quiesce == 1:
-            return quiesce(board,alpha,beta)
+            return quiesce(board,alpha,beta,model)
         else:
-            return evaluate_value(board)
+            return evaluate_value(board,model)
     for move in list(board.legal_moves):
         board.push(chess.Move.from_uci(str(move)))
         #print(board)
-        value_i = -negaMax_pruned(board,d-1,-beta,-alpha,use_quiesce)
+        value_i = -negaMax_pruned(board,d-1,-beta,-alpha,use_quiesce,model)
         board.pop()
         if value_i >= beta:                                        # beta pruning
             return beta
@@ -157,12 +169,12 @@ def negaMax_pruned(board,d,alpha,beta,use_quiesce):
             alpha = value_i
     return alpha
 
-def quiesce(board,alpha,beta):
+def quiesce(board,alpha,beta,model):
     """make sure that only quiet, stable states are considered -> avoid horizon effect
     board is chess.py class
     alpha, beta are integer parameters
     """
-    value_stat = evaluate_value(board)
+    value_stat = evaluate_value(board,model)
     if value_stat >= beta:
         return beta
     if alpha < value_stat:
@@ -170,7 +182,7 @@ def quiesce(board,alpha,beta):
     for move in board.legal_moves:
         if board.is_capture(move):
             board.push(chess.Move.from_uci(str(move)))
-            value_aftercapture = -quiesce(board,-beta,-alpha)
+            value_aftercapture = -quiesce(board,-beta,-alpha,model)
             board.pop()
             if value_aftercapture >= beta:
                 return beta
@@ -180,11 +192,15 @@ def quiesce(board,alpha,beta):
 
 ## evaluation metrics ##
 
-def evaluate_value(board):
-    """returns the expected value of a given board based on the
-    "Simplified Evaluation Function" by Tomasz Michniewski
+def evaluate_value(board,model):
+    """This function returns the expected value of a given board.
+    To this end a static evaluation metric is used.
+    If "model is not None", the evaluation is supplemented by
+    the output of the neural network, trained on 10k+ chess games
 
     board is chess.py class
+    model is trained keras/tensorflow model or None
+
     returns the expected value in [centipawns]
     """
     # piecewise values
@@ -355,4 +371,12 @@ def evaluate_value(board):
     value = (material_value_white - material_value_black) + (postion_value_white - postion_value_black)
     if not board.turn:
         value = -value
-    return value
+    if model is None:
+        return value
+    if model is not None:
+        ## Neural Network board score ##
+        board_state_preprocessed = preprocess_board(board)
+        score = predict(model,board_state_preprocessed)
+        if not board.turn:
+            score = -score
+        return score*10 + value

@@ -15,7 +15,8 @@ def pulldata(n):
         # Iterate through all moves and play them on a board.
         if game is None:
             print('Ended early after parsing {} games.'.format(int(i)))
-            return X,np.asarray(y)
+            np.savez_compressed('data/ChessData_2014_compressed_short.npz', a=X, b=np.asarray(y))
+            return
         board = game.board()
         iter = 0
         X_i,y_i = [], []
@@ -60,7 +61,7 @@ def pulldata(n):
             print('Has parsed {} games so far.'.format(int(i)))
             print('So far: ',np.shape(X),np.shape(y))
     print('Ended after parsing {} games.'.format(int(i)))
-    np.savez_compressed('data/ChessData_2014_compressed.npz', a=X, b=np.asarray(y))
+    np.savez_compressed('data/ChessData_2014_compressed_short.npz', a=X, b=np.asarray(y))
 
 def load_training_data():
     '''This function loads training&evaluation data from compressed .npz file
