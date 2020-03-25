@@ -10,9 +10,8 @@ Here two metrics are implemented:
 This results in a deep learning enhanced evaluation metric which achieves a more humanlike chess play. 
 
 ## Further improvements:
--> revise net architecture & training (hyperparameter, training data..) 
-   Up until now: only training on 10000 games for 20 epochs... (use (multiple) GPUs) 
--> implement more efficient search algorithms and make use of move ordering (e.g. explore most promising moves first)
+1) revise net architecture & training (hyperparameter, training data..) Up until now: only training on 10000 games for 20 epochs... (use (multiple) GPUs) 
+2) implement more efficient search algorithms and make use of move ordering (e.g. explore most promising moves first)
 
 ## Instructions:
 ```
