@@ -1,18 +1,19 @@
-# (Neural Network + Minimax Search) - Chess Enginge
-## Core components:
-1) negated Minimax/Quiescence search algorithm
-2) Neural Network, trained on 10-50k chess games
--> deep learning enhanced evaluation metric to achieve more humanlike chess play 
+# Neural Network + Minimax Search - Chess Engine
+## Overview:
+This python built chess engine comprises of a classical negated Minimax search algorithm. Quiescence search is supported to avoid nodes at max depth that end in an unfavorable position (see below for explanation).
 
+At each node, the current board state is evaluated.
+Here two metrics are implemented:
+1) static evaluation metric based on: https://www.chessprogramming.org/Simplified_Evaluation_Function
+2) Neural Network prediction (trained on 10k+ chess games of players with more than 2000 elo)
 
-## TO DO:
--> deploy ML pipeline and integrate into search procedure
--> revise net architecture & training (hyperparameter,training data..)
+This results in a deep learning enhanced evaluation metric which achieves a more humanlike chess play. 
 
-## Requirements:
-```
-chess (pip install python-chess)
-```
+## Further improvements:
+-> revise net architecture & training (hyperparameter, training data..) 
+   Up until now: only training on 10000 games for 20 epochs... (use (multiple) GPUs) 
+-> implement more efficient search algorithms and make use of move ordering (e.g. explore most promising moves first)
+
 ## Instructions:
 ```
 1) clone repository to your local machine
@@ -28,3 +29,5 @@ chess (pip install python-chess)
 https://www.chessprogramming.org/
 ## python-chess:
 https://python-chess.readthedocs.io/en/latest/
+## database
+https://www.ficsgames.org/download.html
